@@ -1,8 +1,5 @@
 # -*- coding:UTF-8 -*-
-import os
 import re
-import urllib
-from io import open
 
 import requests
 from bs4 import BeautifulSoup
@@ -23,31 +20,18 @@ def list_concept(t_url):
     for cate in cate_items:
         print(cate['href'])
         print(cate.text)
-        # for ah in cate:
-        #     # cate.find_all('div', {'class': 'cate_items'})
-        #     print(ah.find_all(attrs={'name': 'href'}))
-    board_wrap = soup.find_all('div', {'class': 'board-wrap'})
-    board_wrap.
+
+    board_aside = soup.find('div', {'class': 'board-txt board-aside'}).find('p')
+    remark = board_aside.text
+    print(remark)
+    print(type(board_aside))
+    board_hq = soup.find('div', {'class': 'board-hq'})
+    print(board_hq.find("h3").text)
+    print(board_hq.find('span', {'class': 'board-xj arr-fall'}).text)
+    print(board_hq.find('p').text)
 
 
 if __name__ == '__main__':
     # htmlStr = get_html(url)
     # print(htmlStr)
     print(list_concept(url))
-
-# soup = BeautifulSoup(html, 'html.parser')
-# img_ul = soup.find_all('div', {'class': 'li_img'})
-#
-# os.makedirs('./传播智客/', exist_ok=True)
-#
-# for ul in img_ul:
-#     imgs = ul.find_all('img')
-#     # print(imgs)
-#     for img in imgs:
-#         url = img['data-original']
-#         img_name = url.split('/')[-1]
-#         req = requests.get(main_url + url, stream=True)
-#         with open('./传播智客/%s' % img_name, 'wb') as f:
-#             for chunk in req.iter_content(chunk_size=128):
-#                 f.write(chunk)
-#         print('Saved %s' % img_name)
