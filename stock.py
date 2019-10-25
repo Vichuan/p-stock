@@ -24,11 +24,20 @@ def list_concept(t_url):
     board_aside = soup.find('div', {'class': 'board-txt board-aside'}).find('p')
     remark = board_aside.text
     print(remark)
-    print(type(board_aside))
     board_hq = soup.find('div', {'class': 'board-hq'})
-    print(board_hq.find("h3").text)
-    print(board_hq.find('span', {'class': 'board-xj arr-fall'}).text)
+    name = board_hq.find("h3").text
+    print(name[:-6])
+    value = board_hq.find('span', {'class': 'board-xj arr-fall'})
+    print(value)
+
+    # print(board_hq.find('span', {'class': 'board-xj arr-fall'}).text)
     print(board_hq.find('p').text)
+
+    dl = soup.find('div', {'class': 'board-infos'}).find_all('dl')
+    for d in dl:
+        print(type(d))
+        # print(d['dt'].text+' '+d['dd'].text)
+    print(dl)
 
 
 if __name__ == '__main__':
