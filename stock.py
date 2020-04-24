@@ -4,7 +4,11 @@ import time
 import random
 import redis as redis
 import requests
+import logging
 from bs4 import BeautifulSoup
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(filename)s:%(lineno)d][%(levelname)s] %(message)s')
+log = logging.getLogger(__name__)
 
 url = 'http://q.10jqka.com.cn/gn/detail/code/301699/'
 concept_url = 'http://q.10jqka.com.cn/gn/detail/field/264648/order/desc/page/{}/ajax/1/code/{}'
@@ -27,6 +31,7 @@ def get_html(t_url):
         'Host': 'q.10jqka.com.cn'
     }
     html = requests.get(t_url, headers=headers).text
+    # print(html)
     return html
 
 
@@ -50,26 +55,46 @@ def list_concept(t_url):
 
 
 def concept_(ccpt_url):
-    html = get_html(ccpt_url)
-    soup = BeautifulSoup(html, 'html.parser')
-    tbody = soup.find('tbody').find_all('tr')
-    for idx, tr in enumerate(tbody):
-        tds = tr.find_all('td')
-        symbol = tds[1].text
-        r.sadd(STOCK_CONCEPT_DETAIL.format(r.hget(STOCK_BASIC_SYMBOL, symbol)), tds[2].text)
+    try:
+        html = get_html(ccpt_url)
+        soup = BeautifulSoup(html, 'html.parser')
+        tbody = soup.find('tbody').find_all('tr')
+        for idx, tr in enumerate(tbody):
+            tds = tr.find_all('td')
+            symbol = tds[1].text
+            r.sadd(STOCK_CONCEPT_DETAIL.format(r.hget(STOCK_BASIC_SYMBOL, symbol)), tds[2].text)
+    except AttributeError:
+        log.error("request failed, sleep 300s, url: %s", ccpt_url)
+        time.sleep(300)
+        html = get_html(ccpt_url)
+        soup = BeautifulSoup(html, 'html.parser')
+        tbody = soup.find('tbody').find_all('tr')
+        for idx, tr in enumerate(tbody):
+            tds = tr.find_all('td')
+            symbol = tds[1].text
+            r.sadd(STOCK_CONCEPT_DETAIL.format(r.hget(STOCK_BASIC_SYMBOL, symbol)), tds[2].text)
 
 
 if __name__ == '__main__':
     dict_concept = list_concept(url)
     for k, v in dict_concept.items():
         c_url = concept_url.format(1, k)
-        soup = BeautifulSoup(get_html(c_url), 'html.parser')
-        board_aside = soup.find('span', {'class': 'page_info'})
-        pages = board_aside.text.split('/')[1]
+        pages = ''
+        try:
+            soup = BeautifulSoup(get_html(c_url), 'html.parser')
+            board_aside = soup.find('span', {'class': 'page_info'})
+            pages = board_aside.text.split('/')[1]
+        except AttributeError:
+            log.error("request failed, sleep 300s, url: %s", c_url)
+            time.sleep(300)
+            soup = BeautifulSoup(get_html(c_url), 'html.parser')
+            board_aside = soup.find('span', {'class': 'page_info'})
+            pages = board_aside.text.split('/')[1]
         i = 1
         while i <= int(pages):
-            second = random.randint(0, 10) + 10
-            time.sleep(second)
-            print("Concept:", v, "，Page:", i, "，Sleep:", second)
+            # second = random.randint(0, 10) + 10
+            # log.info("Sleep:%d", second)
+            # time.sleep(second)
+            log.info("Concept:%s，Page:%d", v, i)
             concept_(concept_url.format(i, k))
             i = i + 1
